@@ -1,0 +1,8 @@
+{
+  "eventNames": [
+    "account_transactionadded",
+    "account_balanceupdated",
+    "account_nicknameupdated",
+    "account_refreshall"
+  ]
+}

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title data-langstr="999001">Workflow Example</title>
+    <!-- LOCAL DEVELOPMENT ONLY -->
+<!--    <script src="https://assets.cdp.wiki/cdp_bundle.js?100"></script>-->
+<!--    <link-->
+<!--      rel="stylesheet"-->
+<!--      href="https://assets.cdp.wiki/cdp_defaultTheme.css?100"-->
+<!--      type="text/css"-->
+<!--    />-->
+<!--    <link rel="stylesheet" href="tile.css" />-->
+<!--    <script src="tile.js"></script>-->
+    <!-- LOCAL DEVELOPMENT ONLY -->
+  </head>
+
+
+  <body>
+    <ons-navigator swipeable id="navigator" page="page1.html"></ons-navigator>
+
+    <template id="page1.html">
+      <ons-page id="page1">
+        <div class="toolbar">
+          <div class="toolbar__center">Kiva Workflow Connector Calls</div>
+        </div>
+
+        <!-- List containing all connector methods -->
+        <ons-list>
+          <ons-list-header>Accounts</ons-list-header>
+          <ons-list-item>
+            <span class="left">retrieveAccountList</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">retrieveAccountListRefresh</span>
+            <span class="right"
+              ><ons-button class="execute" id="retrieveAccountListRefresh"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="right spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular
+            ></span>
+          </ons-list-item>
+
+          <ons-list-header>Transactions</ons-list-header>
+          <ons-list-item>
+            <span class="left">retrieveTransactionList</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">retrieveTransactionCategories</span>
+            <span class="right"
+              ><ons-button class="execute" id="retrieveTransactionCategories"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="right spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular
+            ></span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">editTransaction</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">stopPayment</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">multiCall</span>
+            <span class="right"
+              ><ons-button class="execute" id="multiCall"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="right spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular
+            ></span>
+          </ons-list-item>
+
+          <ons-list-header>Party</ons-list-header>
+          <ons-list-item>
+            <span class="left">retrieveUserBySocial</span>
+            <span class="right"
+              ><ons-button id="retrieveUserBySocial"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="right spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular
+            ></span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">retrieveUserById</span>
+            <span class="right"
+              ><ons-button class="execute" id="retrieveUserById"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="right spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular
+            ></span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">validateMemberAccountInfo</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-header>Transfers</ons-list-header>
+          <ons-list-item>
+            <span class="left">startTransfer</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-item>
+            <span class="left">p2pTransfer</span>
+            <span class="right"
+              ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+
+          <ons-list-header>Real Time Events</ons-list-header>
+          <ons-list-item>
+            <span class="left">subscribe</span>
+            <span class="right"
+            ><ons-button class="enter">Choose Events</ons-button>
+            </span>
+          </ons-list-item>
+          <ons-list-item>
+            <span class="left">sendRealtimeEvent</span>
+            <span class="right"
+            ><ons-button class="enter">Enter Parameters</ons-button>
+            </span>
+          </ons-list-item>
+        </ons-list>
+
+        <!-- retrieveAccountList Alert Dialog -->
+        <template id="retrieveAccountList-dialog.html">
+          <ons-alert-dialog modifier="rowfooter" id="retrieveAccountList-dialog">
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>retrieveAccountList</ons-list-header>
+                <ons-list-item>
+                  <ons-input
+                    id="accountId"
+                    modifier="underbar"
+                    placeholder="accountId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="type"
+                    modifier="underbar"
+                    placeholder="type"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowtransferfrom"
+                    modifier="underbar"
+                    placeholder="allowtransferfrom"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowtransferto"
+                    modifier="underbar"
+                    placeholder="allowtransferto"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowrdc"
+                    modifier="underbar"
+                    placeholder="allowrdc"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowstoppayment"
+                    modifier="underbar"
+                    placeholder="allowstoppayment"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowbillpay"
+                    modifier="underbar"
+                    placeholder="allowbillpay"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowcheckorder"
+                    modifier="underbar"
+                    placeholder="allowcheckorder"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowloanpayoffrequest"
+                    modifier="underbar"
+                    placeholder="allowloanpayoffrequest"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowdispute"
+                    modifier="underbar"
+                    placeholder="allowdispute"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowregeoptin"
+                    modifier="underbar"
+                    placeholder="allowregeoptin"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowenrollinodprotection"
+                    modifier="underbar"
+                    placeholder="allowenrollinodprotection"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="showincontainer"
+                    modifier="underbar"
+                    placeholder="showincontainer"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="isretirementaccount"
+                    modifier="underbar"
+                    placeholder="isretirementaccount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="ishealthsavingsaccount"
+                    modifier="underbar"
+                    placeholder="ishealthsavingsaccount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="is529educationaccount"
+                    modifier="underbar"
+                    placeholder="is529educationaccount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="allowcashadvance"
+                    modifier="underbar"
+                    placeholder="allowcashadvance"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="retrieveAccountList"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- validateMemberAccountInfo Alert Dialog -->
+        <template id="validateMemberAccountInfo-dialog.html">
+        <ons-alert-dialog modifier="rowfooter" id="validateMemberAccountInfo-dialog">
+          <div class="alert-dialog-content">
+            <ons-list>
+              <ons-list-header>validateMemberAccountInfo</ons-list-header>
+              <ons-list-item>
+                <ons-input
+                  id="accountId"
+                  modifier="underbar"
+                  placeholder="accountId"
+                  type="text"
+                ></ons-input>
+              </ons-list-item>
+              <ons-list-item>
+                <ons-input
+                  id="memberId"
+                  modifier="underbar"
+                  placeholder="memberId"
+                  type="text"
+                ></ons-input>
+              </ons-list-item>
+              <ons-list-item>
+                <ons-input
+                  id="firstThreeOfLastName"
+                  modifier="underbar"
+                  placeholder="firstThreeOfLastName"
+                  type="text"
+                ></ons-input>
+              </ons-list-item>
+            </ons-list>
+            <ons-button class="execute" id="validateMemberAccountInfo"
+              >Execute Call</ons-button
+            >
+            <ons-progress-circular
+              class="spinner"
+              style="display: none"
+              indeterminate
+            ></ons-progress-circular>
+          </div>
+          <div class="alert-dialog-footer">
+            <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+          </div>
+        </ons-alert-dialog>
+        </template>
+
+        <!-- startTransfer Alert Dialog -->
+        <template id="startTransfer-dialog.html">
+          <ons-alert-dialog modifier="rowfooter" id="startTransfer-dialog">
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>startTransfer</ons-list-header>
+                <ons-list-item>
+                  <ons-input
+                    id="accountFrom"
+                    modifier="underbar"
+                    placeholder="accountFrom"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="accountTo"
+                    modifier="underbar"
+                    placeholder="accountTo"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="transferAmount"
+                    modifier="underbar"
+                    placeholder="transferAmount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="transferMemo"
+                    modifier="underbar"
+                    placeholder="transferMemo"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="occurrenceFromAccountType"
+                    modifier="underbar"
+                    placeholder="occurrenceFromAccountType"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="occurrenceToAccountType"
+                    modifier="underbar"
+                    placeholder="occurrenceToAccountType"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="startTransfer"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- p2pTransfer Alert Dialog -->
+        <template id="p2pTransfer-dialog.html">
+          <ons-alert-dialog modifier="rowfooter" id="p2pTransfer-dialog">
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>p2pTransfer</ons-list-header>
+                <ons-list-item>
+                  <ons-input
+                    id="accountFrom"
+                    modifier="underbar"
+                    placeholder="accountFrom"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="accountTo"
+                    modifier="underbar"
+                    placeholder="accountTo"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="transferAmount"
+                    modifier="underbar"
+                    placeholder="transferAmount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="transferMemo"
+                    modifier="underbar"
+                    placeholder="transferMemo"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="occurrenceFromAccountType"
+                    modifier="underbar"
+                    placeholder="occurrenceFromAccountType"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="occurrenceToAccountType"
+                    modifier="underbar"
+                    placeholder="occurrenceToAccountType"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="p2pTransfer"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- editTransaction Alert Dialog -->
+        <template id="editTransaction-dialog.html">
+          <ons-alert-dialog modifier="rowfooter" id="editTransaction-dialog">
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>editTransaction</ons-list-header>
+                <ons-list-item>
+                  <ons-input
+                    id="accountId"
+                    modifier="underbar"
+                    placeholder="accountId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="transactionId"
+                    modifier="underbar"
+                    placeholder="transactionId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="endUserTransCategory"
+                    modifier="underbar"
+                    placeholder="endUserTransCategory"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="endUserTransNote"
+                    modifier="underbar"
+                    placeholder="endUserTransNote"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="endUserTransDescription"
+                    modifier="underbar"
+                    placeholder="endUserTransDescription"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="editTransaction"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- stopPayment Alert Dialog -->
+        <template id="stopPayment-dialog.html">
+          <ons-alert-dialog modifier="rowfooter" id="stopPayment-dialog">
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>stopPayment</ons-list-header>
+                <ons-list-item>
+                  <ons-input
+                    id="accountId"
+                    modifier="underbar"
+                    placeholder="accountId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="holdDescription"
+                    modifier="underbar"
+                    placeholder="holdDescription"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="holdAmount"
+                    modifier="underbar"
+                    placeholder="holdAmount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="checkNumber"
+                    modifier="underbar"
+                    placeholder="checkNumber"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="feeAccountId"
+                    modifier="underbar"
+                    placeholder="feeAccountId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="feeAmount"
+                    modifier="underbar"
+                    placeholder="feeAmount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="feeAccountType"
+                    modifier="underbar"
+                    placeholder="feeAccountType"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="stopPayment"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- retrieveTransactionList Alert Dialog -->
+        <template id="retrieveTransactionList-dialog.html">
+          <ons-alert-dialog
+            modifier="rowfooter"
+            id="retrieveTransactionList-dialog"
+          >
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>retrieveTransactionList</ons-list-header>
+                <ons-list-item>
+                  <ons-input
+                    id="accountId"
+                    modifier="underbar"
+                    placeholder="accountId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="effectiveStartDate"
+                    modifier="underbar"
+                    placeholder="effectiveStartDate"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="effectiveEndDate"
+                    modifier="underbar"
+                    placeholder="effectiveEndDate"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="category"
+                    modifier="underbar"
+                    placeholder="category"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="transactionId"
+                    modifier="underbar"
+                    placeholder="transactionId"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="type"
+                    modifier="underbar"
+                    placeholder="type"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="status"
+                    modifier="underbar"
+                    placeholder="status"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="descriptionContains"
+                    modifier="underbar"
+                    placeholder="descriptionContains"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="source"
+                    modifier="underbar"
+                    placeholder="source"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="postedStartDate"
+                    modifier="underbar"
+                    placeholder="postedStartDate"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="postedEndDate"
+                    modifier="underbar"
+                    placeholder="postedEndDate"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="minCheckNumber"
+                    modifier="underbar"
+                    placeholder="minCheckNumber"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="maxCheckNumber"
+                    modifier="underbar"
+                    placeholder="maxCheckNumber"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="minAmount"
+                    modifier="underbar"
+                    placeholder="minAmount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="maxAmount"
+                    modifier="underbar"
+                    placeholder="maxAmount"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                    id="merchant"
+                    modifier="underbar"
+                    placeholder="merchant"
+                    type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="retrieveTransactionList"
+                >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                class="spinner"
+                style="display: none"
+                indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- subscribe Alert Dialog -->
+        <template id="subscribe-dialog.html">
+          <ons-alert-dialog
+                  modifier="rowfooter"
+                  id="subscribe-dialog"
+          >
+            <div class="alert-dialog-content">
+              <ons-list id = "subscribe-dialog-list">
+                <ons-list-header>Subscribe to Events</ons-list-header>
+
+              </ons-list>
+              <ons-button class="execute" id="subscribe"
+              >Subscribe</ons-button
+              >
+              <ons-progress-circular
+                      class="spinner"
+                      style="display: none"
+                      indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+        <!-- send Alert Dialog -->
+        <template id="sendRealtimeEvent-dialog.html">
+          <ons-alert-dialog
+                  modifier="rowfooter"
+                  id="sendRealtimeEvent-dialog"
+          >
+            <div class="alert-dialog-content">
+              <ons-list>
+                <ons-list-header>Send Realtime Event</ons-list-header>
+                <ons-list-item>
+                  <ons-select id="eventName" modifier="underbar">
+                  </ons-select>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                          id="accountId1"
+                          modifier="underbar"
+                          placeholder="Account ID"
+                          type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                          id="accountId2"
+                          modifier="underbar"
+                          placeholder="Account ID"
+                          type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                          id="accountId3"
+                          modifier="underbar"
+                          placeholder="Account ID"
+                          type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                          id="accountId4"
+                          modifier="underbar"
+                          placeholder="Account ID"
+                          type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                          id="accountId5"
+                          modifier="underbar"
+                          placeholder="Account ID"
+                          type="text"
+                  ></ons-input>
+                </ons-list-item>
+                <ons-list-item>
+                  <ons-input
+                          id="accountId6"
+                          modifier="underbar"
+                          placeholder="Account ID"
+                          type="text"
+                  ></ons-input>
+                </ons-list-item>
+              </ons-list>
+              <ons-button class="execute" id="sendRealtimeEvent"
+              >Execute Call</ons-button
+              >
+              <ons-progress-circular
+                      class="spinner"
+                      style="display: none"
+                      indeterminate
+              ></ons-progress-circular>
+            </div>
+            <div class="alert-dialog-footer">
+              <ons-alert-dialog-button>Cancel</ons-alert-dialog-button>
+            </div>
+          </ons-alert-dialog>
+        </template>
+
+      </ons-page>
+    </template>
+
+    <!-- Necessary for the tile render on the platform -->
+    <script>
+      container.tile.ui.showBody();
+    </script>
+  </body>
+</html>
