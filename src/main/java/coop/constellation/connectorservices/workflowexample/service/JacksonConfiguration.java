@@ -1,4 +1,4 @@
-package coop.constellation.connectorservices.workflowexample;
+package coop.constellation.connectorservices.workflowexample.service;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;

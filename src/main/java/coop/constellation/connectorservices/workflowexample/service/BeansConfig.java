@@ -1,4 +1,4 @@
-package coop.constellation.connectorservices.workflowexample;
+package coop.constellation.connectorservices.workflowexample.service;
 
 import com.xtensifi.connectorservices.common.events.RealtimeEventService;
 import com.xtensifi.connectorservices.common.events.RealtimeEventServiceImpl;
