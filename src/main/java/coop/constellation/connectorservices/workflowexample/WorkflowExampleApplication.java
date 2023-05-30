@@ -1,4 +1,4 @@
-package coop.constellation.connectorservices.workflowexample.service;
+package coop.constellation.connectorservices.workflowexample;
 
 // Required to create a springboot application
 

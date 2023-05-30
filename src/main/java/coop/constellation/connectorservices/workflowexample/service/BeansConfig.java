@@ -6,7 +6,7 @@ import com.xtensifi.connectorservices.common.workflow.ConnectorConfig;
 import com.xtensifi.connectorservices.common.workflow.ConnectorHubService;
 import com.xtensifi.connectorservices.common.workflow.ConnectorHubServiceImpl;
 import coop.constellation.connectorservices.workflowexample.helpers.RealtimeEvents;
-import coop.constellation.connectorservices.workflowexample.helpers.RealtimeEventsImpl;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

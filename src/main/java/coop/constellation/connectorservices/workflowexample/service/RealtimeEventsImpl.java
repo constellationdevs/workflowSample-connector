@@ -1,4 +1,4 @@
-package coop.constellation.connectorservices.workflowexample.helpers;
+package coop.constellation.connectorservices.workflowexample.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.xtensifi.connectorservices.common.events.RealtimeEventException;
@@ -10,6 +10,8 @@ import com.xtensifi.connectorservices.common.events.model.RealtimeEventData;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
 import com.xtensifi.connectorservices.common.workflow.ConnectorRequestData;
 import com.xtensifi.dspco.ConnectorMessage;
+
+import coop.constellation.connectorservices.workflowexample.helpers.RealtimeEvents;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
