@@ -1,75 +1,156 @@
 package coop.constellation.connectorservices.workflowexample.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
+import com.xtensifi.connectorservices.common.workflow.ConnectorState;
 import com.xtensifi.cufx.CustomData;
 import com.xtensifi.cufx.ValuePair;
 import com.xtensifi.dspco.ConnectorMessage;
 import com.xtensifi.dspco.ConnectorParametersResponse;
 import com.xtensifi.dspco.ExternalServicePayload;
+import com.xtensifi.dspco.ResponseStatusMessage;
+import coop.constellation.connectorservices.workflowexample.handlers.HandlerLogic;
+import coop.constellation.connectorservices.workflowexample.handlers.WorkflowHandlerLogic;
+import lombok.NonNull;
+import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import lombok.Getter;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class ConnectorControllerBase {
 
-    @Getter
-    private final ObjectMapper objectMapper;
 
-    private static ConnectorLogging clog = new ConnectorLogging();
+    private ObjectMapper objectMapper;
 
-    public ConnectorControllerBase() {
-        objectMapper = new ObjectMapper();
-        objectMapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+    @Autowired
+    public void setObjectMapper(ObjectMapper om){
+        this.objectMapper = om;
+    }
+
+    private ConnectorLogging clog;
+    @Autowired public void setConnectorLogging(ConnectorLogging cl){
+        this.clog = cl;
+    }
+
+    private BaseParamsSupplier baseParamsSupplier;
+    @Autowired public void setBaseParamsSupplier(BaseParamsSupplier supplier){
+        this.baseParamsSupplier = supplier;
     }
 
     /**
-     * Get all the value pairs out of the connector message. NOTE: if a name occurs
-     * more than once, only the first occurrance is returned.
-     * 
+     * Boilerplate method for handling the connector message
+     * @param logPrefix A prefix for log messages and stats reasons
+     * @param connectorJson The raw JSON for the request connector message
+     * @param handlerLogic The custom logic for generating a response
+     * @return a response connector message
+     */
+    ConnectorMessage handleConnectorMessage(final String logPrefix,
+                                            final String connectorJson,
+                                            final HandlerLogic handlerLogic) {
+        ConnectorMessage connectorMessage = null;
+        ResponseStatusMessage responseStatusMessage = null;
+        try {
+            connectorMessage = objectMapper.readValue(connectorJson, ConnectorMessage.class);
+
+            final Map<String, String> allParams = getAllParams(connectorMessage, baseParamsSupplier.get());
+
+            final String userId = connectorMessage.getExternalServicePayload().getUserData().getUserId();
+
+            final String response = handlerLogic.generateResponse(allParams, userId, connectorMessage);
+
+            connectorMessage.setResponse("{\"response\": " + response + "}");
+
+            responseStatusMessage = new ResponseStatusMessage() {{
+                setStatus("OK");
+                setStatusCode("200");
+                setStatusDescription("Success");
+                setStatusReason(logPrefix + "Has responded.");
+            }};
+        } catch (Exception ex) {
+            clog.error(connectorMessage,logPrefix + ex.getMessage());
+            responseStatusMessage = new ResponseStatusMessage() {{
+                setStatus("ERROR");
+                setStatusCode("500");
+                setStatusDescription("Failed");
+                setStatusReason(logPrefix + ": " + ex.toString());
+            }};
+            connectorMessage.setResponse("{\"response\":{\"success\":false}}");
+
+        } finally {
+            if (connectorMessage == null) {
+                clog.warn(connectorMessage, "Failed to create a connector message from the request, creating a new one for the response.");
+                connectorMessage = new ConnectorMessage();
+            }
+            connectorMessage.setResponseStatus(responseStatusMessage);
+        }
+        return connectorMessage;
+    }
+
+    public Function<ConnectorState, ConnectorState> handleResponseEntity(WorkflowHandlerLogic handler) {
+        return connectorState -> {
+            ConnectorMessage connectorMessage = connectorState.getConnectorMessage();
+            clog.info(connectorMessage, "inside handle response entity");
+
+            final Map<String, String> allParams = getAllParams(connectorMessage, baseParamsSupplier.get());
+
+            String response ="{}";
+            try {
+                response = handler.generateResponse(allParams, connectorState);
+                clog.info(connectorMessage, "this is the final response " + response);
+
+            } catch (Exception e) {
+                clog.error(connectorState.getConnectorMessage(), e.getMessage());
+            }
+
+            connectorState.setResponse("{\"response\": " + response + "}");
+            return connectorState;
+        };
+    }
+
+    ConnectorMessage getErrorResponse(@NonNull final String connectorJson, @NonNull final String message) throws IOException {
+        ConnectorMessage connectorMessage = objectMapper.readValue(connectorJson, ConnectorMessage.class);
+        connectorMessage.setResponseStatus(new ResponseStatusMessage() {{
+                                                   setStatus("ERROR");
+                                                   setStatusCode("500");
+                                                   setStatusDescription("Failed");
+                                                   setStatusReason(message);
+                                               }});
+        connectorMessage.setResponse("{\"response\":{\"success\":false}}");
+        return connectorMessage;
+    }
+
+
+    /**
+     * Get all the value pairs out of the connector message.
+     * NOTE: if a name occurs more than once, only the first occurrance is returned.
      * @param connectorMessage the request connector message
      * @return a Map of the value pairs
      */
-    static public Map<String, String> getAllParams(final ConnectorMessage connectorMessage) {
-        final Map<String, String> allParams = new HashMap<>();
-
+    public static Map<String, String> getAllParams(final ConnectorMessage connectorMessage, Map<String, String> baseParams) {
+        final Map<String, String> allParams = new HashMap<>(baseParams);
         final ExternalServicePayload externalServicePayload = connectorMessage.getExternalServicePayload();
-        final ConnectorParametersResponse connectorParametersResponse = connectorMessage
-                .getConnectorParametersResponse();
-
-        clog.info(connectorMessage, "BEGIN getAllParams");
+        final ConnectorParametersResponse connectorParametersResponse = connectorMessage.getConnectorParametersResponse();
 
         if (externalServicePayload != null) {
-
             final CustomData methodParams = externalServicePayload.getPayload();
-            if (methodParams != null)
+            if(methodParams != null)
                 for (ValuePair valuePair : methodParams.getValuePair()) {
-                    allParams.putIfAbsent(valuePair.getName(), valuePair.getValue());
+                    allParams.putIfAbsent(valuePair.getName(), StringEscapeUtils.unescapeHtml4(valuePair.getValue()));
                 }
         }
-
         if (connectorParametersResponse != null) {
-
             final CustomData otherParams = connectorParametersResponse.getParameters();
-            if (otherParams != null) {
+            if(otherParams != null) {
                 for (ValuePair valuePair : otherParams.getValuePair()) {
-                    allParams.putIfAbsent(valuePair.getName(), valuePair.getValue());
+                    allParams.putIfAbsent(valuePair.getName(), StringEscapeUtils.unescapeHtml4(valuePair.getValue()));
                 }
             }
-
-            final CustomData methodParams = connectorParametersResponse.getMethod().getParameters();
-            if (methodParams != null) {
-                for (ValuePair valuePair : methodParams.getValuePair()) {
-                    allParams.putIfAbsent(valuePair.getName(), valuePair.getValue());
-                }
-            }
-
         }
-
         return allParams;
     }
 
