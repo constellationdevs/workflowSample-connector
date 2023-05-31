@@ -100,32 +100,30 @@ public class WorkflowExampleController extends ConnectorControllerBase {
     // Workflow methods return a ResponseEntity
     @PostMapping(path = "/retrieveAccountListRefresh", produces = "application/json", consumes = "application/json")
     public ResponseEntity retrieveAccountListRefresh(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getAccountsRefresh"))
           .thenApply(this.handleResponseEntity(retrieveAccountListRefreshHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
 
     @PostMapping(path = "/retrieveAccountList", produces = "application/json", consumes = "application/json")
     public ResponseEntity retrieveAccountList(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getAccounts"))
           .thenApply(this.handleResponseEntity(retrieveAccountListHandler))
           .thenApply(this.handleResponseEntity(retrieveAccountListRefreshHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);}
+      return responseEntityBuilder.build(HttpStatus.OK, future);}
     // endregion
 
 
@@ -135,16 +133,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     @PostMapping(path = "/retrieveTransactionList", produces = "application/json", consumes = "application/json")
     public ResponseEntity retrieveTransactionList(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getTransactions"))
           .thenApply(this.handleResponseEntity(retrieveTransactionListHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);}
+      return responseEntityBuilder.build(HttpStatus.OK, future);}
     // endregion
     
 
@@ -154,16 +151,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     @PostMapping(path = "/retrieveUserBySocial", produces = "application/json", consumes = "application/json")
     public ResponseEntity retrieveUserBySocial(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getPartyBySSN"))
           .thenApply(this.handleResponseEntity(retrieveUserBySocialHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);}
+      return responseEntityBuilder.build(HttpStatus.OK, future);}
 
     
     // // endregion
@@ -174,16 +170,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     @PostMapping(path = "/retrieveUserById", produces = "application/json", consumes = "application/json")
     public ResponseEntity retrieveUserById(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getPartyById"))
           .thenApply(this.handleResponseEntity(retrieveUserByIdHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
     // // endregion
@@ -194,16 +189,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     @PostMapping(path = "/retrieveTransactionCategories", produces = "application/json", consumes = "application/json")
     public ResponseEntity retrieveTransactionCategories(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getTransactionCategories"))
           .thenApply(this.handleResponseEntity(retrieveTransactionCategoriesHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
     // // endregion
@@ -214,16 +208,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     @PostMapping(path = "/editTransactions", produces = "application/json", consumes = "application/json")
     public ResponseEntity editTransactions(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "updateTransactions"))
           .thenApply(this.handleResponseEntity(editTransactionsHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
     // // endregion
@@ -235,16 +228,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
  
     @PostMapping(path = "/startTransfer", produces = "application/json", consumes = "application/json")
     public ResponseEntity startTransfer(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "createInternalTransfer"))
           .thenApply(this.handleResponseEntity(startTransferHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
     // // endregion
@@ -252,16 +244,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
     // // region p2pTransfer
     @PostMapping(path = "/p2pTransfer", produces = "application/json", consumes = "application/json")
     public ResponseEntity p2pTransfer(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+         .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "personToPersonTransfer"))
           .thenApply(this.handleResponseEntity(p2pTransferHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
     // // endregion
@@ -269,16 +260,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
     // // region stopPayment
     @PostMapping(path = "/stopPayment", produces = "application/json", consumes = "application/json")
     public ResponseEntity stopPayment(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "createStopPayment"))
           .thenApply(this.handleResponseEntity(stopPaymentHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
     // // endregion
@@ -286,16 +276,15 @@ public class WorkflowExampleController extends ConnectorControllerBase {
     // region Validate Member Account Info
     @PostMapping(path = "/validateMemberAccountInfo", produces = "application/json", consumes = "application/json")
     public ResponseEntity validateMemberAccountInfo(@RequestBody final ConnectorMessage connectorMessage) {
-  
-      CompletableFuture<ConnectorState> future = WorkflowHelpers.createNewConnectorStateFuture(connectorMessage);
-  
-      CompletableFuture<ConnectorMessage> resultsFuture = future
+    
+      CompletableFuture<ConnectorMessage> future = connectorHubService
+          .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "validateMemberAccountInfo"))
           .thenApply(this.handleResponseEntity(validateMemberAccountInfoHandler))
           .thenApply(connectorHubService.completeAsync())
           .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
               "Error running submitApplication future: " + exception.getMessage()));
   
-      return responseEntityBuilder.build(HttpStatus.OK, resultsFuture);
+      return responseEntityBuilder.build(HttpStatus.OK, future);
   
     }
 
