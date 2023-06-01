@@ -21,10 +21,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class EditTransactionHandler extends HandlerBase implements WorkflowHandlerLogic{
-    
+public class EditTransactionHandler extends HandlerBase implements WorkflowHandlerLogic {
+
     private final BaseParamsSupplier baseParamsSupplier;
-    private final ConnectorLogging logger;    
+    private final ConnectorLogging logger;
+
     public JdbcTemplate createJdbc(ConnectorMessage connectorMessage) {
         Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
 
@@ -34,35 +35,35 @@ public class EditTransactionHandler extends HandlerBase implements WorkflowHandl
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {
-                List<ConnectorResponse> connectorResponseList = connectorState.getConnectorResponseList().getResponses();
+        List<ConnectorResponse> connectorResponseList = connectorState.getConnectorResponseList().getResponses();
 
-                // This is how you capture the response
-                String resp = "{\"response\": 1}";
-                for (ConnectorResponse connectorResponse : connectorResponseList) {
-    
-                    // This is how you retrieve the name of the connector
-                    String name = connectorResponse.getConnectorRequestData().getConnectorName();
-                    logger.info(connectorState.getConnectorMessage(), name);
-    
-                    // This is how you capture the response
-                    String data = connectorResponse.getResponse();
-    
-                    // Parse the response how ever you see fit
-                    resp = "{\"response\": " + data + "}";
-                    logger.info(connectorState.getConnectorMessage(), resp);
-                }
-    
-                // This is required, and is how you set the response for a workflow method
-                connectorState.setResponse(resp);
-                return resp;
+        // This is how you capture the response
+        String resp = "{\"response\": 1}";
+        for (ConnectorResponse connectorResponse : connectorResponseList) {
+
+            // This is how you retrieve the name of the connector
+            String name = connectorResponse.getConnectorRequestData().getConnectorName();
+            logger.info(connectorState.getConnectorMessage(), name);
+
+            // This is how you capture the response
+            String data = connectorResponse.getResponse();
+
+            // Parse the response how ever you see fit
+            resp = "{\"response\": " + data + "}";
+            logger.info(connectorState.getConnectorMessage(), resp);
+        }
+
+        // This is required, and is how you set the response for a workflow method
+        connectorState.setResponse(resp);
+        return resp;
     }
-
 
     public Function<ConnectorRequestParams, ConnectorRequestParams> getEditTransactionParams(
             ConnectorMessage connectorMessage) {
 
         return connectorRequestParams -> {
-            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
+            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage,
+                    baseParamsSupplier.get());
 
             logger.info(connectorMessage, "all params GC: " + allParams);
 
@@ -72,7 +73,6 @@ public class EditTransactionHandler extends HandlerBase implements WorkflowHandl
             return createConnectorRequestParams(connectorRequestParams, allParams, paramNames);
         };
     }
-
 
     @Override
     public String generateResponse(Map<String, String> parms, String userId, ConnectorMessage connectorMessage)

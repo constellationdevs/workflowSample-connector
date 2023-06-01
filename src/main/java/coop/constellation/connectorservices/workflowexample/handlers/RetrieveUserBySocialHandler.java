@@ -9,7 +9,6 @@ import java.util.function.Function;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
 import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
 import com.xtensifi.connectorservices.common.workflow.ConnectorResponse;
@@ -21,10 +20,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class RetrieveUserBySocialHandler extends HandlerBase implements WorkflowHandlerLogic{
-    
+public class RetrieveUserBySocialHandler extends HandlerBase implements WorkflowHandlerLogic {
+
     private final BaseParamsSupplier baseParamsSupplier;
     private final ConnectorLogging logger;
+
     public JdbcTemplate createJdbc(ConnectorMessage connectorMessage) {
         Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
 
@@ -34,30 +34,30 @@ public class RetrieveUserBySocialHandler extends HandlerBase implements Workflow
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {
-                List<ConnectorResponse> connectorResponseList = connectorState.getConnectorResponseList().getResponses();
+        List<ConnectorResponse> connectorResponseList = connectorState.getConnectorResponseList().getResponses();
 
-                // This is how you capture the response
-                String resp = "{\"response\": 1}";
-                for (ConnectorResponse connectorResponse : connectorResponseList) {
-    
-                    // This is how you retrieve the name of the connector
-                    String name = connectorResponse.getConnectorRequestData().getConnectorName();
-                    logger.info(connectorState.getConnectorMessage(), name);
-    
-                    // This is how you capture the response
-                    String data = connectorResponse.getResponse();
-    
-                    // Parse the response how ever you see fit
-                    resp = "{\"response\": " + data + "}";
-                    logger.info(connectorState.getConnectorMessage(), resp);
-                }
-    
-                // This is required, and is how you set the response for a workflow method
-                connectorState.setResponse(resp);
-                return resp;
+        // This is how you capture the response
+        String resp = "{\"response\": 1}";
+        for (ConnectorResponse connectorResponse : connectorResponseList) {
+
+            // This is how you retrieve the name of the connector
+            String name = connectorResponse.getConnectorRequestData().getConnectorName();
+            logger.info(connectorState.getConnectorMessage(), name);
+
+            // This is how you capture the response
+            String data = connectorResponse.getResponse();
+
+            // Parse the response how ever you see fit
+            resp = "{\"response\": " + data + "}";
+            logger.info(connectorState.getConnectorMessage(), resp);
+        }
+
+        // This is required, and is how you set the response for a workflow method
+        connectorState.setResponse(resp);
+        return resp;
     }
 
-public Function<ConnectorState, ConnectorState> processRetrieveUserBySocial() {
+    public Function<ConnectorState, ConnectorState> processRetrieveUserBySocial() {
         return connectorState -> {
             logger.info(connectorState.getConnectorMessage(), "processRetrieveUserBySocial");
 
@@ -93,7 +93,8 @@ public Function<ConnectorState, ConnectorState> processRetrieveUserBySocial() {
             ConnectorMessage connectorMessage) {
 
         return connectorRequestParams -> {
-            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
+            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage,
+                    baseParamsSupplier.get());
 
             logger.info(connectorMessage, "all params GC: " + allParams);
             String SSN = allParams.getOrDefault("ssn", "");

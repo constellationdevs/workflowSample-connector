@@ -12,8 +12,7 @@ import java.util.Map;
 @FunctionalInterface
 public interface WorkflowHandlerLogic {
 
-
-    String generateResponse(final Map<String, String> parms, final ConnectorState connectorState) throws IOException, ParseException;
-
+    String generateResponse(final Map<String, String> parms, final ConnectorState connectorState)
+            throws IOException, ParseException;
 
 }

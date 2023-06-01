@@ -22,12 +22,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class RetrieveTransactionListHandler extends HandlerBase implements WorkflowHandlerLogic{
-    
+public class RetrieveTransactionListHandler extends HandlerBase implements WorkflowHandlerLogic {
+
     private final BaseParamsSupplier baseParamsSupplier;
     private final ConnectorLogging logger;
     private final ObjectMapper mapper;
-
 
     public JdbcTemplate createJdbc(ConnectorMessage connectorMessage) {
         Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
@@ -38,27 +37,27 @@ public class RetrieveTransactionListHandler extends HandlerBase implements Workf
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {
-                List<ConnectorResponse> connectorResponseList = connectorState.getConnectorResponseList().getResponses();
+        List<ConnectorResponse> connectorResponseList = connectorState.getConnectorResponseList().getResponses();
 
-                // This is how you capture the response
-                String resp = "{\"response\": 1}";
-                for (ConnectorResponse connectorResponse : connectorResponseList) {
-    
-                    // This is how you retrieve the name of the connector
-                    String name = connectorResponse.getConnectorRequestData().getConnectorName();
-                    logger.info(connectorState.getConnectorMessage(), name);
-    
-                    // This is how you capture the response
-                    String data = connectorResponse.getResponse();
-    
-                    // Parse the response how ever you see fit
-                    resp = "{\"response\": " + data + "}";
-                    logger.info(connectorState.getConnectorMessage(), resp);
-                }
-    
-                // This is required, and is how you set the response for a workflow method
-                connectorState.setResponse(resp);
-                return resp;
+        // This is how you capture the response
+        String resp = "{\"response\": 1}";
+        for (ConnectorResponse connectorResponse : connectorResponseList) {
+
+            // This is how you retrieve the name of the connector
+            String name = connectorResponse.getConnectorRequestData().getConnectorName();
+            logger.info(connectorState.getConnectorMessage(), name);
+
+            // This is how you capture the response
+            String data = connectorResponse.getResponse();
+
+            // Parse the response how ever you see fit
+            resp = "{\"response\": " + data + "}";
+            logger.info(connectorState.getConnectorMessage(), resp);
+        }
+
+        // This is required, and is how you set the response for a workflow method
+        connectorState.setResponse(resp);
+        return resp;
     }
 
     public Function<ConnectorState, ConnectorState> processRetrieveTransactionList() {
@@ -98,7 +97,8 @@ public class RetrieveTransactionListHandler extends HandlerBase implements Workf
 
         return connectorRequestParams -> {
             // Gets a list of all paramters passed into your connector call
-            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
+            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage,
+                    baseParamsSupplier.get());
 
             logger.info(connectorMessage, "all params GC: " + allParams);
             // Finds the value of the accountId parameter passed in from the tile, if not
@@ -115,7 +115,8 @@ public class RetrieveTransactionListHandler extends HandlerBase implements Workf
 
             if (!strFilter.equals("")) {
                 try {
-                    Map<String, String> filterMap = mapper.readValue(strFilter, new TypeReference<>(){});
+                    Map<String, String> filterMap = mapper.readValue(strFilter, new TypeReference<>() {
+                    });
                     filterMap.entrySet().stream()
                             .forEach((entry) -> connectorRequestParams.addNameValue(entry.getKey(), entry.getValue()));
 

@@ -24,34 +24,38 @@ import java.util.function.Function;
 @Component
 public class ConnectorControllerBase {
 
-
     private ObjectMapper objectMapper;
 
     @Autowired
-    public void setObjectMapper(ObjectMapper om){
+    public void setObjectMapper(ObjectMapper om) {
         this.objectMapper = om;
     }
 
     private ConnectorLogging clog;
-    @Autowired public void setConnectorLogging(ConnectorLogging cl){
+
+    @Autowired
+    public void setConnectorLogging(ConnectorLogging cl) {
         this.clog = cl;
     }
 
     private BaseParamsSupplier baseParamsSupplier;
-    @Autowired public void setBaseParamsSupplier(BaseParamsSupplier supplier){
+
+    @Autowired
+    public void setBaseParamsSupplier(BaseParamsSupplier supplier) {
         this.baseParamsSupplier = supplier;
     }
 
     /**
      * Boilerplate method for handling the connector message
-     * @param logPrefix A prefix for log messages and stats reasons
+     * 
+     * @param logPrefix     A prefix for log messages and stats reasons
      * @param connectorJson The raw JSON for the request connector message
-     * @param handlerLogic The custom logic for generating a response
+     * @param handlerLogic  The custom logic for generating a response
      * @return a response connector message
      */
     ConnectorMessage handleConnectorMessage(final String logPrefix,
-                                            final String connectorJson,
-                                            final HandlerLogic handlerLogic) {
+            final String connectorJson,
+            final HandlerLogic handlerLogic) {
         ConnectorMessage connectorMessage = null;
         ResponseStatusMessage responseStatusMessage = null;
         try {
@@ -65,25 +69,30 @@ public class ConnectorControllerBase {
 
             connectorMessage.setResponse("{\"response\": " + response + "}");
 
-            responseStatusMessage = new ResponseStatusMessage() {{
-                setStatus("OK");
-                setStatusCode("200");
-                setStatusDescription("Success");
-                setStatusReason(logPrefix + "Has responded.");
-            }};
+            responseStatusMessage = new ResponseStatusMessage() {
+                {
+                    setStatus("OK");
+                    setStatusCode("200");
+                    setStatusDescription("Success");
+                    setStatusReason(logPrefix + "Has responded.");
+                }
+            };
         } catch (Exception ex) {
-            clog.error(connectorMessage,logPrefix + ex.getMessage());
-            responseStatusMessage = new ResponseStatusMessage() {{
-                setStatus("ERROR");
-                setStatusCode("500");
-                setStatusDescription("Failed");
-                setStatusReason(logPrefix + ": " + ex.toString());
-            }};
+            clog.error(connectorMessage, logPrefix + ex.getMessage());
+            responseStatusMessage = new ResponseStatusMessage() {
+                {
+                    setStatus("ERROR");
+                    setStatusCode("500");
+                    setStatusDescription("Failed");
+                    setStatusReason(logPrefix + ": " + ex.toString());
+                }
+            };
             connectorMessage.setResponse("{\"response\":{\"success\":false}}");
 
         } finally {
             if (connectorMessage == null) {
-                clog.warn(connectorMessage, "Failed to create a connector message from the request, creating a new one for the response.");
+                clog.warn(connectorMessage,
+                        "Failed to create a connector message from the request, creating a new one for the response.");
                 connectorMessage = new ConnectorMessage();
             }
             connectorMessage.setResponseStatus(responseStatusMessage);
@@ -98,7 +107,7 @@ public class ConnectorControllerBase {
 
             final Map<String, String> allParams = getAllParams(connectorMessage, baseParamsSupplier.get());
 
-            String response ="{}";
+            String response = "{}";
             try {
                 response = handler.generateResponse(allParams, connectorState);
                 clog.info(connectorMessage, "this is the final response " + response);
@@ -112,40 +121,45 @@ public class ConnectorControllerBase {
         };
     }
 
-    ConnectorMessage getErrorResponse(@NonNull final String connectorJson, @NonNull final String message) throws IOException {
+    ConnectorMessage getErrorResponse(@NonNull final String connectorJson, @NonNull final String message)
+            throws IOException {
         ConnectorMessage connectorMessage = objectMapper.readValue(connectorJson, ConnectorMessage.class);
-        connectorMessage.setResponseStatus(new ResponseStatusMessage() {{
-                                                   setStatus("ERROR");
-                                                   setStatusCode("500");
-                                                   setStatusDescription("Failed");
-                                                   setStatusReason(message);
-                                               }});
+        connectorMessage.setResponseStatus(new ResponseStatusMessage() {
+            {
+                setStatus("ERROR");
+                setStatusCode("500");
+                setStatusDescription("Failed");
+                setStatusReason(message);
+            }
+        });
         connectorMessage.setResponse("{\"response\":{\"success\":false}}");
         return connectorMessage;
     }
 
-
     /**
      * Get all the value pairs out of the connector message.
      * NOTE: if a name occurs more than once, only the first occurrance is returned.
+     * 
      * @param connectorMessage the request connector message
      * @return a Map of the value pairs
      */
-    public static Map<String, String> getAllParams(final ConnectorMessage connectorMessage, Map<String, String> baseParams) {
+    public static Map<String, String> getAllParams(final ConnectorMessage connectorMessage,
+            Map<String, String> baseParams) {
         final Map<String, String> allParams = new HashMap<>(baseParams);
         final ExternalServicePayload externalServicePayload = connectorMessage.getExternalServicePayload();
-        final ConnectorParametersResponse connectorParametersResponse = connectorMessage.getConnectorParametersResponse();
+        final ConnectorParametersResponse connectorParametersResponse = connectorMessage
+                .getConnectorParametersResponse();
 
         if (externalServicePayload != null) {
             final CustomData methodParams = externalServicePayload.getPayload();
-            if(methodParams != null)
+            if (methodParams != null)
                 for (ValuePair valuePair : methodParams.getValuePair()) {
                     allParams.putIfAbsent(valuePair.getName(), StringEscapeUtils.unescapeHtml4(valuePair.getValue()));
                 }
         }
         if (connectorParametersResponse != null) {
             final CustomData otherParams = connectorParametersResponse.getParameters();
-            if(otherParams != null) {
+            if (otherParams != null) {
                 for (ValuePair valuePair : otherParams.getValuePair()) {
                     allParams.putIfAbsent(valuePair.getName(), StringEscapeUtils.unescapeHtml4(valuePair.getValue()));
                 }

@@ -57,7 +57,7 @@ public class P2pTransferHandler extends HandlerBase implements WorkflowHandlerLo
 
                 // This is how you capture the response
                 String data = connectorResponse.getResponse();
-                final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
+                
 
 
                 // check for a successful transfer

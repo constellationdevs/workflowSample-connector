@@ -1,7 +1,5 @@
 package coop.constellation.connectorservices.workflowexample;
 
-
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
 import com.xtensifi.connectorservices.common.workflow.ConnectorHubService;
@@ -24,15 +22,16 @@ public class LocalConnectorResponseLoaderConfig {
             ObjectMapper mapper) {
         return new MockConnectorHubService(connectorState -> {
 
-            String method = connectorState.getConnectorRequestParams().getConnectorRequestData().getMethod();  
-            String connectorName = connectorState.getConnectorRequestParams().getConnectorRequestData().getConnectorName();
+            String method = connectorState.getConnectorRequestParams().getConnectorRequestData().getMethod();
+            String connectorName = connectorState.getConnectorRequestParams().getConnectorRequestData()
+                    .getConnectorName();
             // load response
             try {
-                String response ="";
-             
-                    response = IOUtils.resourceToString(String.format("/%s-%s.json", connectorName, method),
-                            StandardCharsets.UTF_8);
-             
+                String response = "";
+
+                response = IOUtils.resourceToString(String.format("/%s-%s.json", connectorName, method),
+                        StandardCharsets.UTF_8);
+
                 connectorState.addResponse(new ConnectorResponse(
                         connectorState.getConnectorRequestParams().getConnectorRequestData(), response));
                 return connectorState;

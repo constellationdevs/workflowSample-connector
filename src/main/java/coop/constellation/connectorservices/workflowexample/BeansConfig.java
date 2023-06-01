@@ -8,7 +8,6 @@ import com.xtensifi.connectorservices.common.workflow.ConnectorHubService;
 import com.xtensifi.connectorservices.common.workflow.ConnectorHubServiceImpl;
 import com.xtensifi.dspco.ConnectorMessage;
 
-
 import coop.constellation.connectorservices.workflowexample.controller.BaseParamsSupplier;
 import coop.constellation.connectorservices.workflowexample.helpers.ConnectorResponseEntityBuilder;
 import coop.constellation.connectorservices.workflowexample.helpers.EnhancedConnectorLogging;
@@ -29,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 
 import static org.springframework.http.HttpStatus.OK;
 
-
 @Configuration
 public class BeansConfig {
 
@@ -47,18 +45,18 @@ public class BeansConfig {
 
     /**
      * Used for sending realtime events
+     * 
      * @return
      */
     @Bean
-    RealtimeEventService realtimeEventService(){
+    RealtimeEventService realtimeEventService() {
         return new RealtimeEventServiceImpl();
     }
 
     @Bean
-    RealtimeEvents realtimeEvents(){
+    RealtimeEvents realtimeEvents() {
         return new RealtimeEventsImpl();
     }
-
 
     @Bean
     ConnectorHubService connectorHubService() {
@@ -82,7 +80,8 @@ public class BeansConfig {
     @AllArgsConstructor
     public static class LocalConnectorResponseEntityBuilder implements ConnectorResponseEntityBuilder {
         @Override
-        public ResponseEntity<ConnectorMessage> build(HttpStatus status, CompletableFuture<ConnectorMessage> messageFuture) {
+        public ResponseEntity<ConnectorMessage> build(HttpStatus status,
+                CompletableFuture<ConnectorMessage> messageFuture) {
             ConnectorMessage message;
             try {
                 message = messageFuture.get(); // block
@@ -94,26 +93,27 @@ public class BeansConfig {
         }
     }
 
-        /**
+    /**
      * This is the default response entity builder used when deployed.
-     * It doesn't utilize the completableFuture. Instead, it returns an OK status immediately.
+     * It doesn't utilize the completableFuture. Instead, it returns an OK status
+     * immediately.
      * The future is assumed to POST its results to the connector hub in deployment.
      * This is mainly meant to be used in a with the MockConnectorHubService.
      */
     @Bean
     @Profile("!local")
-    ConnectorResponseEntityBuilder responseEntityBuilder(){
+    ConnectorResponseEntityBuilder responseEntityBuilder() {
         return (status, message) -> ResponseEntity.status(OK).build();
     }
 
-
     /**
      * This builder waits for the completable future before returning its response.
-     * This is intended to be used in a local profile alongside the MockConnectorHubService.
+     * This is intended to be used in a local profile alongside the
+     * MockConnectorHubService.
      */
     @Bean
     @Profile("local")
-    ConnectorResponseEntityBuilder localResponseEntityBuilder(){
+    ConnectorResponseEntityBuilder localResponseEntityBuilder() {
         return new LocalConnectorResponseEntityBuilder();
     }
 

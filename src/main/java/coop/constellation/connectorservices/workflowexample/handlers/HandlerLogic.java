@@ -10,7 +10,8 @@ import com.xtensifi.dspco.ConnectorMessage;
  * Interface for the custom logic to generate a response
  */
 
- @FunctionalInterface
- public interface HandlerLogic {
-     String generateResponse(final Map<String, String> parms, final String userId, final ConnectorMessage connectorMessage) throws IOException, ParseException;
- }
+@FunctionalInterface
+public interface HandlerLogic {
+    String generateResponse(final Map<String, String> parms, final String userId,
+            final ConnectorMessage connectorMessage) throws IOException, ParseException;
+}
