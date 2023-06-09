@@ -14,8 +14,6 @@ import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
 import com.xtensifi.dspco.ConnectorMessage;
 import com.xtensifi.dspco.UserData;
 
-import coop.constellation.connectorservices.workflowexample.helpers.MultiLazyDataSourcePool;
-
 @Service
 public abstract class HandlerBase implements HandlerLogic {
 
@@ -44,33 +42,6 @@ public abstract class HandlerBase implements HandlerLogic {
             }
         }
         return connectorRequestParams;
-    }
-
-    /**
-     * Creates a JdbcTemplate using the lazy pooling datasource.
-     * 
-     * @param parms The parms passed to the request
-     * @return
-     */
-    protected JdbcTemplate createJdbcTemplate(final Map<String, String> parms, ConnectorLogging clog,
-            ConnectorMessage cm) {
-        return new JdbcTemplate(MultiLazyDataSourcePool.getDataSource(parms, () -> parms.get("org"), clog, cm));
-    }
-
-    /**
-     * Creates a NamedParameterJdbcTemplate using the lazy pooling datasource.
-     * 
-     * @param parms The parms passed to the request
-     * @return
-     */
-    NamedParameterJdbcTemplate createNamedParameterJdbcTemplate(final Map<String, String> parms, ConnectorLogging clog,
-            ConnectorMessage cm) {
-        return new NamedParameterJdbcTemplate(
-                MultiLazyDataSourcePool.getDataSource(parms, () -> parms.get("org"), clog, cm));
-    }
-
-    DataSource getDataSource(final Map<String, String> params, ConnectorLogging clog, ConnectorMessage cm) {
-        return MultiLazyDataSourcePool.getDataSource(params, () -> params.get("org"), clog, cm);
     }
 
 }

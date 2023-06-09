@@ -31,12 +31,6 @@ public class StopPaymentHandler extends HandlerBase implements WorkflowHandlerLo
     private final RealtimeEventService realtimeEventService;
     private final RealtimeEvents realtimeEvents;
 
-    public JdbcTemplate createJdbc(ConnectorMessage connectorMessage) {
-        Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
-
-        return createJdbcTemplate(parms, logger, connectorMessage);
-    }
-
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {

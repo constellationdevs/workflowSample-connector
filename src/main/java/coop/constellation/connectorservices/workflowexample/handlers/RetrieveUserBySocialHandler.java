@@ -25,12 +25,6 @@ public class RetrieveUserBySocialHandler extends HandlerBase implements Workflow
     private final BaseParamsSupplier baseParamsSupplier;
     private final ConnectorLogging logger;
 
-    public JdbcTemplate createJdbc(ConnectorMessage connectorMessage) {
-        Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
-
-        return createJdbcTemplate(parms, logger, connectorMessage);
-    }
-
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {

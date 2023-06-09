@@ -54,5 +54,26 @@ tileconfig.json
 tilestrings-en.json
 tile.less
 ### Connector
-run `python3 build-deploy.py <name of deployed connector>`
-Upload the docker file, externalconnector.zip and pom.xml to the connector project in the portal.
+## Local Structure
+basic_connector_sample/
+├─ Dockerfile/
+├─ lib/
+├─ pom.xml/
+├─ readme
+├─ src/
+├─ target/
+
+- Make sure the name and version of your connector is reflected accurately in all of the connector assets
+
+- The lib/ and src/ directory should be packaged(compressed) together at the same level, in a [externalconnector.zip] for upload
+  - Any other connector assets *excluding* those listed in the Local Connector Structure should also be included in this zipped folder.
+
+- The portal is only expecting the following required files at the time of upload [externalconnector.zip] [pom.xml] [Dockerfile]
+
+## Portal Upload Structure
+externalconnector.zip/
+pom.xml/
+Dockerfile/
+
+## Spring profiles
+Spring Profiles are used to activate different implementations of ConnectorLogging Beans. If you choose to use VS Code as your IDE, a lauch.json file is included that will make use of the "local" profile to print logs to the IDE output console.

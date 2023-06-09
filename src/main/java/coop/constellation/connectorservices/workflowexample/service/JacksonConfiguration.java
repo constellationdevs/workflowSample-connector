@@ -18,11 +18,11 @@ public class JacksonConfiguration {
      * Further configures the object mapper that spring boot configures.
      */
     @PostConstruct
-    public ObjectMapper configureObjectMapper(){
-        objectMapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS); // don't use IEEE floats for deserialization
-        objectMapper.enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN); // don't use scientific notation for serializing BigDecimals
+    public ObjectMapper configureObjectMapper() {
+        objectMapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS); // don't use IEEE floats for
+                                                                                // deserialization
+        objectMapper.enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN); // don't use scientific notation for
+                                                                              // serializing BigDecimals
         return objectMapper;
     }
 }
-
-

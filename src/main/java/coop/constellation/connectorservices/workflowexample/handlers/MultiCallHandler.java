@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class MultiCallHandler extends HandlerBase implements WorkflowHandlerLogic {
 
     private final ConnectorLogging logger;
+
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {
