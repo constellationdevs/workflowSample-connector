@@ -2,6 +2,13 @@
 
 Tile and connector to test kivapublic endpoints and the sending of realtime events
 
+## Best practices
+
+- We recommend using the [Use this template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template) feature to create a new repository.
+
+- Cloning or forking is a satisfactory alternative.
+
+- Any changes to the connector should be contained to your copy of the connector project only. You should never push any commits (and associated branches) to this repo.
 ## Connector Endpoints
 
 | Connector Endpoint            | Kiva permissions required    |
