@@ -1,13 +1,13 @@
-FROM openjdk:17-alpine
+FROM amazoncorretto:17-alpine-jdk
 VOLUME /d/tmp
 ARG JAR_FILE
-ADD ${JAR_FILE} app.jar
-EXPOSE 9090
-USER root
+ADD ${JAR_FILE} app.jar 
+EXPOSE 9154
+USER root  
 COPY lib/dd-java-agent.jar $JAVA_HOME/lib
 COPY lib/env.sh /usr/local/bin
-ENV SERVICE_NAME ${connectorName}
-ENV SERVICE_VERSION ${connectorVersion}
-ENV CU All
+ENV SERVICE_NAME {serviceName}
+ENV SERVICE_VERSION {serviceVersion}
+ENV CU ALL
 RUN apk --no-cache add curl
 ENTRYPOINT ["/bin/sh", "-c" , "chmod 755 /usr/local/bin/env.sh && . /usr/local/bin/env.sh && exec java -Djava.security.egd=file:/dev/./urandom $JAVA_AGENT -jar /app.jar"]
