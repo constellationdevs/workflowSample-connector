@@ -59,6 +59,7 @@ public class BeansConfig {
     }
 
     @Bean
+    @Profile("!local")
     ConnectorHubService connectorHubService() {
         return new ConnectorHubServiceImpl();
     }
