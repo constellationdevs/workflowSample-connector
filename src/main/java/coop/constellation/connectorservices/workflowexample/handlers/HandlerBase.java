@@ -3,10 +3,6 @@ package coop.constellation.connectorservices.workflowexample.handlers;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;

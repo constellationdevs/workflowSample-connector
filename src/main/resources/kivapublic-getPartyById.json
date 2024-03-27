@@ -1,0 +1,237 @@
+{
+    "partyMessage": {
+        "messageContext": {
+            "fiId": "cdp-symxchange",
+            "includeBlankFields": true,
+            "includeZeroNumerics": true,
+            "user": []
+        },
+        "partyFilter": {
+            "partyIdList": {
+                "partyId": [
+                    "12345"
+                ]
+            }
+        },
+        "partyList": {
+            "party": [
+                {
+                    "id": "1234",
+                    "irs": {
+                        "taxId": "123456789",
+                        "taxIdEncrypted": true,
+                        "taxIdType": "SocialSecurityNumber",
+                        "reportingFlag": true
+                    },
+                    "type": "Individual",
+                    "characteristics": {
+                        "individual": {
+                            "firstName": "JOHN",
+                            "middleName": "A",
+                            "lastName": "SMITH",
+                            "formattedName": "JOHN A SMITH",
+                            "nickname": "JOHNNY",
+                            "birthdate": "1985-10-01",
+                            "employmentList": {
+                                "employment": [
+                                    {
+                                        "employerAddress": [],
+                                        "employerPhone": [],
+                                        "employmentIncome": {
+                                            "grossIncomeData": {
+                                                "amount": {
+                                                    "value": 0,
+                                                    "currencyCode": "USD",
+                                                    "exchangeRate": 0
+                                                }
+                                            },
+                                            "netIncomeData": {
+                                                "amount": {
+                                                    "value": 0,
+                                                    "currencyCode": "USD",
+                                                    "exchangeRate": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "identificationDocumentList": {
+                        "identificationDocument": [
+                            {
+                                "idDocumentIdentifer": "1",
+                                "idDocumentType": {
+                                    "individualDocument": "DriversLicense"
+                                },
+                                "idIssuedBy": "VT",
+                                "idExpirationDate": "2010-01-05",
+                                "idDisplayOrder": 0,
+                                "idVerifyDateTime": "2006-06-13",
+                                "documentId": "A1234567"
+                            },
+                            {
+                                "idDocumentIdentifer": "2",
+                                "idDocumentType": {
+                                    "individualDocument": "USPassport"
+                                },
+                                "idExpirationDate": "2008-06-17",
+                                "idDisplayOrder": 0,
+                                "idVerifyDateTime": "2006-06-13",
+                                "documentId": "123456789"
+                            },
+                            {
+                                "idDocumentIdentifer": "3",
+                                "idDocumentType": {
+                                    "individualDocument": "Other"
+                                },
+                                "idDisplayOrder": 0
+                            }
+                        ]
+                    },
+                    "contactIdList": {
+                        "contactId": []
+                    },
+                    "contactList": {
+                        "contact": [
+                            {
+                                "contactId": "0000000000000123400001",
+                                "contactType": "Address",
+                                "address": {
+                                    "line1": "9309 TURMOLINE ST",
+                                    "city": "SAN MARCOS",
+                                    "stateProvince": "CA",
+                                    "postalCode": "92069",
+                                    "countryCode": "US",
+                                    "country": "United States of America",
+                                    "type": "Home"
+                                },
+                                "customData": {
+                                    "valuePair": [
+                                        {
+                                            "name": "PrimaryType",
+                                            "value": "NotApplicable"
+                                        },
+                                        {
+                                            "name": "Sequence",
+                                            "value": "0"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "contactId": "1234500002",
+                                "contactType": "Phone",
+                                "phone": {
+                                    "type": "Home",
+                                    "number": "999-999-9999"
+                                },
+                                "customData": {
+                                    "valuePair": [
+                                        {
+                                            "name": "PrimaryType",
+                                            "value": "NotApplicable"
+                                        },
+                                        {
+                                            "name": "Sequence",
+                                            "value": "0"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "contactId": "1234500001",
+                                "contactType": "Phone",
+                                "phone": {
+                                    "type": "Mobile",
+                                    "number": "999-999-9999"
+                                },
+                                "customData": {
+                                    "valuePair": [
+                                        {
+                                            "name": "PrimaryType",
+                                            "value": "NotApplicable"
+                                        },
+                                        {
+                                            "name": "Sequence",
+                                            "value": "0"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "contactId": "1234500000",
+                                "contactType": "Email",
+                                "email": {
+                                    "type": "Home",
+                                    "address": "TEST@TEST.COM"
+                                },
+                                "customData": {
+                                    "valuePair": [
+                                        {
+                                            "name": "PrimaryType",
+                                            "value": "NotApplicable"
+                                        },
+                                        {
+                                            "name": "Sequence",
+                                            "value": "0"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "customData": {
+                        "valuePair": [
+                            {
+                                "name": "IsPrimaryForType",
+                                "value": "true"
+                            },
+                            {
+                                "name": "Type",
+                                "value": "Primary "
+                            },
+                            {
+                                "name": "MarkAsPrevious",
+                                "value": "false"
+                            },
+                            {
+                                "name": "IsPrevious",
+                                "value": "false"
+                            },
+                            {
+                                "name": "MbrStatus",
+                                "value": "Member"
+                            },
+                            {
+                                "name": "Locator",
+                                "value": "1"
+                            },
+                            {
+                                "name": "MemberNumber",
+                                "value": "0000012345"
+                            },
+                            {
+                                "name": "IndividualId",
+                                "value": "00000000000001234"
+                            },
+                            {
+                                "name": "IsEmployee",
+                                "value": "0"
+                            },
+                            {
+                                "name": "MembershipDate",
+                                "value": "2008-04-02"
+                            },
+                            {
+                                "name": "ShortName",
+                                "value": "SMITH, JOHN A"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

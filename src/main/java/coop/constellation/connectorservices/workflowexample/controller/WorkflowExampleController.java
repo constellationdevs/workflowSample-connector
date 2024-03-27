@@ -54,7 +54,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @CrossOrigin
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/externalConnector/workflowMethodExample/1.0")
+@RequestMapping("/externalConnector/WorkflowSampleConnector/1.0")
 public class WorkflowExampleController extends ConnectorControllerBase {
 
     @Autowired
