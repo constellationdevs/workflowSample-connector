@@ -8,25 +8,17 @@ import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
-import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
 import com.xtensifi.connectorservices.common.workflow.ConnectorResponse;
 import com.xtensifi.connectorservices.common.workflow.ConnectorState;
 import com.xtensifi.dspco.ConnectorMessage;
-import coop.constellation.connectorservices.workflowexample.controller.BaseParamsSupplier;
-import coop.constellation.connectorservices.workflowexample.controller.ConnectorControllerBase;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class RetrieveTransactionListHandler extends HandlerBase implements WorkflowHandlerLogic {
 
-    private final BaseParamsSupplier baseParamsSupplier;
     private final ConnectorLogging logger;
-    private final ObjectMapper mapper;
-
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {
@@ -84,45 +76,6 @@ public class RetrieveTransactionListHandler extends HandlerBase implements Workf
         };
     }
 
-    /* Get the accountID and transaction filters passed in */
-    public Function<ConnectorRequestParams, ConnectorRequestParams> retrieveTransactionParams(
-            ConnectorMessage connectorMessage) {
-
-        return connectorRequestParams -> {
-            // Gets a list of all paramters passed into your connector call
-            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage,
-                    baseParamsSupplier.get());
-
-            logger.info(connectorMessage, "all params GC: " + allParams);
-            // Finds the value of the accountId parameter passed in from the tile, if not
-            // found returns an empty string
-            String accountID = allParams.getOrDefault("accountId", "");
-
-            if (!accountID.isEmpty() || accountID != null) {
-                // Add the accountId parameter to our list of parameters to be returned
-                connectorRequestParams.addNameValue("accountId", accountID);
-            }
-
-            // Finding the value of the filters parameter passed from the tile
-            String strFilter = allParams.getOrDefault("filters", "");
-
-            if (!strFilter.equals("")) {
-                try {
-                    Map<String, String> filterMap = mapper.readValue(strFilter, new TypeReference<>() {
-                    });
-                    filterMap.entrySet().stream()
-                            .forEach((entry) -> connectorRequestParams.addNameValue(entry.getKey(), entry.getValue()));
-
-                } catch (Exception e) {
-                    logger.error(connectorMessage, "Could not get filters: " + e.getMessage());
-                }
-
-            }
-
-            // Returns our list of parameters to pass into the kivapublic call
-            return connectorRequestParams;
-        };
-    }
 
     @Override
     public String generateResponse(Map<String, String> parms, String userId, ConnectorMessage connectorMessage)

@@ -5,16 +5,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.events.RealtimeEventService;
 
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
 import com.xtensifi.connectorservices.common.workflow.ConnectorHubService;
 import com.xtensifi.connectorservices.common.workflow.ConnectorRequestData;
+import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
 import com.xtensifi.connectorservices.common.workflow.ConnectorResponse;
 import com.xtensifi.connectorservices.common.workflow.ConnectorState;
 import com.xtensifi.dspco.ConnectorMessage;
@@ -31,7 +34,6 @@ import coop.constellation.connectorservices.workflowexample.handlers.RetrieveUse
 import coop.constellation.connectorservices.workflowexample.handlers.StartTransferHandler;
 import coop.constellation.connectorservices.workflowexample.handlers.StopPaymentHandler;
 import coop.constellation.connectorservices.workflowexample.handlers.ValidateMemberAccountInfoHandler;
-import coop.constellation.connectorservices.workflowexample.helpers.ConnectorResponseEntityBuilder;
 import coop.constellation.connectorservices.workflowexample.helpers.RealtimeEvents;
 import lombok.RequiredArgsConstructor;
 
@@ -54,7 +56,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @CrossOrigin
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/externalConnector/WorkflowSampleConnector/1.0")
+@RequestMapping("/externalConnector/workflowMethodExample/1.0")
 public class WorkflowExampleController extends ConnectorControllerBase {
 
     @Autowired
@@ -63,10 +65,8 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     private final ConnectorLogging clog;
     private final ObjectMapper mapper;
-    private final ConnectorResponseEntityBuilder responseEntityBuilder;
     private final RealtimeEventService realtimeEventService;
     private final RealtimeEvents realtimeEvents;
-    private final BaseParamsSupplier baseParamsSupplier;
 
     private final RetrieveAccountListRefreshHandler retrieveAccountListRefreshHandler;
     private final RetrieveAccountListHandler retrieveAccountListHandler;
@@ -97,32 +97,65 @@ public class WorkflowExampleController extends ConnectorControllerBase {
     // region retrieveAccountList
 
     // Workflow methods return a ResponseEntity
-    @PostMapping(path = "/retrieveAccountListRefresh", produces = "application/json", consumes = "application/json")
-    public ResponseEntity retrieveAccountListRefresh(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/retrieveAccountListRefresh", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> retrieveAccountListRefresh(@RequestBody final ConnectorMessage connectorMessage) {
+        clog.info(connectorMessage, connectorMessage.toString());
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
+        connectorHubService
                 .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getAccountsRefresh"))
                 .thenApply(this.handleResponseEntity(retrieveAccountListRefreshHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running retrieveAccountList: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
     }
 
-    @PostMapping(path = "/retrieveAccountList", produces = "application/json", consumes = "application/json")
-    public ResponseEntity retrieveAccountList(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/retrieveAccountList", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> retrieveAccountList(@RequestBody final ConnectorMessage connectorMessage) {
+        clog.info(connectorMessage, connectorMessage.toString());
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getAccounts"))
+        connectorHubService
+
+                .initAsyncConnectorRequest(connectorMessage,
+                        new ConnectorRequestData("kivapublic", "1.0", "getAccounts"))
+                .thenApply(this.retrieveFilterAcctParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(retrieveAccountListHandler))
-                .thenApply(this.handleResponseEntity(retrieveAccountListRefreshHandler))
-                .thenApply(connectorHubService.completeAsync())
-                .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                .thenApplyAsync(connectorHubService.completeAsync())
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+                .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
+                        "Error running retrieveAccountList: " + exception.getMessage()));
+
+        return responseEntity.build();
+
+    }
+
+    private Function<ConnectorRequestParams, ConnectorRequestParams> retrieveFilterAcctParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            // Gets a list of all paramters passed into your connector call
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+
+            // Finding the value of the filters parameter passed from the tile
+            String strFilter = allParams.getOrDefault("filters", "");
+
+            if (!strFilter.equals("")) {
+                connectorRequestParams.addNameValue("accountFilter", strFilter);
+            }
+
+            // Returns our list of parameters to pass into the kivapublic call
+            return connectorRequestParams;
+        };
     }
     // endregion
 
@@ -130,17 +163,64 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     // Workflow methods return a ResponseEntity
 
-    @PostMapping(path = "/retrieveTransactionList", produces = "application/json", consumes = "application/json")
-    public ResponseEntity retrieveTransactionList(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/retrieveTransactionList", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> retrieveTransactionList(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getTransactions"))
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
+                        new ConnectorRequestData("kivapublic", "1.0", "getTransactions"))
+                .thenApply(this.retrieveTransactionParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(retrieveTransactionListHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running retrieveTransactionList: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
+
+    }
+
+    /* Get the accountID and transaction filters passed in */
+    private Function<ConnectorRequestParams, ConnectorRequestParams> retrieveTransactionParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            // Gets a list of all paramters passed into your connector call
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+            // Finds the value of the accountId parameter passed in from the tile, if not
+            // found returns an empty string
+            String accountID = allParams.getOrDefault("accountId", "");
+
+            if (!accountID.isEmpty() || accountID != null) {
+                // Add the accountId parameter to our list of parameters to be returned
+                connectorRequestParams.addNameValue("accountId", accountID);
+            }
+
+            // Finding the value of the filters parameter passed from the tile
+            String strFilter = allParams.getOrDefault("filters", "");
+
+            if (!strFilter.equals("")) {
+                try {
+                    Map<String, String> filterMap = mapper.readValue(strFilter, new TypeReference<>() {
+                    });
+                    filterMap.entrySet().stream()
+                            .forEach((entry) -> connectorRequestParams.addNameValue(entry.getKey(), entry.getValue()));
+
+                } catch (Exception e) {
+                    clog.error(connectorMessage, "Could not get filters: " + e.getMessage());
+                }
+
+            }
+
+            // Returns our list of parameters to pass into the kivapublic call
+            return connectorRequestParams;
+        };
     }
     // endregion
 
@@ -148,17 +228,43 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     // Workflow methods return a ResponseEntity
 
-    @PostMapping(path = "/retrieveUserBySocial", produces = "application/json", consumes = "application/json")
-    public ResponseEntity retrieveUserBySocial(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/retrieveUserBySocial", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> retrieveUserBySocial(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getPartyBySSN"))
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
+                        new ConnectorRequestData("kivapublic", "1.0", "getPartyBySSN"))
+                .thenApply(this.retrieveUserBySocialParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(retrieveUserBySocialHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running retrieveUserBySocial: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
+
+    }
+
+    /* Get the ssn passed in */
+    private Function<ConnectorRequestParams, ConnectorRequestParams> retrieveUserBySocialParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+            String SSN = allParams.getOrDefault("ssn", "");
+
+            if (!SSN.equals("")) {
+                connectorRequestParams.addNameValue("ssn", SSN);
+            }
+
+            return connectorRequestParams;
+        };
     }
 
     // // endregion
@@ -167,17 +273,20 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     // // Workflow methods return a ResponseEntity
 
-    @PostMapping(path = "/retrieveUserById", produces = "application/json", consumes = "application/json")
-    public ResponseEntity retrieveUserById(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/retrieveUserById", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> retrieveUserById(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
                 .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getPartyById"))
                 .thenApply(this.handleResponseEntity(retrieveUserByIdHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running retrieveUserById: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
     }
     // // endregion
@@ -186,18 +295,21 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     // // Workflow methods return a ResponseEntity
 
-    @PostMapping(path = "/retrieveTransactionCategories", produces = "application/json", consumes = "application/json")
-    public ResponseEntity retrieveTransactionCategories(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/retrieveTransactionCategories", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> retrieveTransactionCategories(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
                 .executeConnector(connectorMessage,
                         new ConnectorRequestData("kivapublic", "1.0", "getTransactionCategories"))
                 .thenApply(this.handleResponseEntity(retrieveTransactionCategoriesHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running retrieveTransactionCategories: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
     }
     // // endregion
@@ -206,18 +318,40 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     // // Workflow methods return a ResponseEntity
 
-    @PostMapping(path = "/editTransactions", produces = "application/json", consumes = "application/json")
-    public ResponseEntity editTransactions(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/editTransaction", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> editTransaction(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "updateTransactions"))
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
+                        new ConnectorRequestData("kivapublic", "1.0", "updateTransaction"))
+                .thenApply(this.getEditTransactionParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(editTransactionsHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running editTransaction: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
+    }
+
+    private Function<ConnectorRequestParams, ConnectorRequestParams> getEditTransactionParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+
+            List<String> paramNames = List.of("accountId", "transactionId", "endUserTransCategory", "endUserTransNote",
+                    "endUserTransDescription");
+
+            return createConnectorRequestParams(connectorRequestParams, allParams, paramNames);
+        };
     }
     // // endregion
 
@@ -225,92 +359,217 @@ public class WorkflowExampleController extends ConnectorControllerBase {
 
     // // Workflow methods return a ResponseEntity
 
-    @PostMapping(path = "/startTransfer", produces = "application/json", consumes = "application/json")
-    public ResponseEntity startTransfer(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/startTransfer", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> startTransfer(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage,
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
                         new ConnectorRequestData("kivapublic", "1.0", "createInternalTransfer"))
+                .thenApply(this.getStartTransferParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(startTransferHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running startTransfer: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
+    }
+
+    private Function<ConnectorRequestParams, ConnectorRequestParams> getStartTransferParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+
+            List<String> paramNames = List.of("accountFrom", "accountTo", "transferAmount", "transferMemo",
+                    "occurrenceFromAccountType", "occurrenceToAccountType", "paymentType");
+
+            return createConnectorRequestParams(connectorRequestParams, allParams, paramNames);
+        };
     }
     // // endregion
 
     // // region p2pTransfer
-    @PostMapping(path = "/p2pTransfer", produces = "application/json", consumes = "application/json")
-    public ResponseEntity p2pTransfer(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/p2pTransfer", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> p2pTransfer(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage,
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
                         new ConnectorRequestData("kivapublic", "1.0", "personToPersonTransfer"))
+                .thenApply(this.getP2pTransferParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(p2pTransferHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running p2pTransfer: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
+    }
+
+    private Function<ConnectorRequestParams, ConnectorRequestParams> getP2pTransferParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+
+            List<String> paramNames = List.of("accountFrom", "accountTo", "transferAmount", "transferMemo",
+                    "occurrenceFromAccountType", "occurrenceToAccountType", "paymentType");
+
+            return createConnectorRequestParams(connectorRequestParams, allParams, paramNames);
+        };
     }
     // // endregion
 
     // // region stopPayment
-    @PostMapping(path = "/stopPayment", produces = "application/json", consumes = "application/json")
-    public ResponseEntity stopPayment(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/stopPayment", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> stopPayment(@RequestBody final ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "createStopPayment"))
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
+                        new ConnectorRequestData("kivapublic", "1.0", "createStopPayment"))
+                .thenApply(this.getStopPaymentParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(stopPaymentHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running stopPayment: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
+    }
+
+    private Function<ConnectorRequestParams, ConnectorRequestParams> getStopPaymentParams(
+            ConnectorMessage connectorMessage) {
+
+        return connectorRequestParams -> {
+            final Map<String, String> allParams = getAllParams(connectorMessage);
+
+            clog.info(connectorMessage, "all params GC: " + allParams);
+
+            List<String> paramNames = List.of("accountId", "holdDescription", "holdAmount", "checkNumber",
+                    "startCheckNumber", "endCheckNumber", "feeAccountId", "feeAmount", "feeAccountType");
+
+            return createConnectorRequestParams(connectorRequestParams, allParams, paramNames);
+        };
     }
     // // endregion
 
     // region Validate Member Account Info
-    @PostMapping(path = "/validateMemberAccountInfo", produces = "application/json", consumes = "application/json")
-    public ResponseEntity validateMemberAccountInfo(@RequestBody final ConnectorMessage connectorMessage) {
+    @CrossOrigin
+    @PostMapping(path = "/validateMemberAccountInfo", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> validateMemberAccountInfo(@RequestBody final ConnectorMessage connectorMessage)
+            throws JsonProcessingException {
+        clog.info(connectorMessage, mapper.writeValueAsString(connectorMessage));
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
 
-        CompletableFuture<ConnectorMessage> future = connectorHubService
-                .executeConnector(connectorMessage,
+        connectorHubService
+                .initAsyncConnectorRequest(connectorMessage,
                         new ConnectorRequestData("kivapublic", "1.0", "validateMemberAccountInfo"))
+                .thenApply(this.getValidateMemberAccountInfoParams(connectorMessage))
+                .thenApply(connectorHubService.callConnectorAsync())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(validateMemberAccountInfoHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running submitApplication future: " + exception.getMessage()));
+                        "Error running retrieveAccountList: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, future);
+        return responseEntity.build();
 
     }
 
-    @PostMapping(path = "/multiCall", produces = "application/json", consumes = "application/json")
-    public ResponseEntity multiCall(@RequestBody final ConnectorMessage connectorMessage) {
+    private Function<ConnectorRequestParams, ConnectorRequestParams> getValidateMemberAccountInfoParams(
+            ConnectorMessage connectorMessage) {
 
-        CompletableFuture<ConnectorState> getAccountsFuture = connectorHubService.initAsyncConnectorRequest(
-                connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getAccounts"))
-                .thenApplyAsync(connectorHubService.callConnectorAsync())
-                .thenApply(connectorHubService.waitForConnectorResponse());
+        return connectorRequestParams -> {
+            final Map<String, String> allParams = getAllParams(connectorMessage);
 
-        CompletableFuture<ConnectorState> getTransactionsFuture = connectorHubService.initAsyncConnectorRequest(
-                connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getTransactions"))
-                .thenApplyAsync(connectorHubService.callConnectorAsync())
-                .thenApply(connectorHubService.waitForConnectorResponse());
+            List<String> paramList = List.of("memberId", "accountId", "firstThreeOfLastName");
 
-        CompletableFuture<ConnectorMessage> resultFuture = invokeCompletableFutures(
-                List.of(getAccountsFuture, getTransactionsFuture), connectorMessage)
+            for (String paramName : paramList) {
+                String paramValue = allParams.getOrDefault(paramName, "");
+                connectorRequestParams.addNameValue(paramName, paramValue);
+            }
+
+            try {
+                clog.info(connectorMessage, "all params GC: " + mapper.writeValueAsString(allParams));
+                clog.info(connectorMessage, "connector request params for validate member account info: "
+                        + mapper.writeValueAsString(connectorRequestParams));
+                clog.info(connectorMessage,
+                        "this is the connector message: " + mapper.writeValueAsString(connectorMessage));
+            } catch (JsonProcessingException e) {
+                // do nothing
+            }
+
+            return connectorRequestParams;
+        };
+    }
+
+    // // endregion
+
+    @CrossOrigin
+    @PostMapping(path = "/multiCall", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> multiCall(@RequestBody final ConnectorMessage connectorMessage) {
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.status(HttpStatus.OK);
+
+        connectorHubService
+                .executeConnector(connectorMessage, new ConnectorRequestData("kivapublic", "1.0", "getAccounts"))
+                .thenApplyAsync(connectorState -> connectorHubService.prepareNextConnector(
+                        new ConnectorRequestData("kivapublic", "1.0", "getTransactions"), connectorState))
+                .thenApply(this.getMultiCallParams())
+                .thenApplyAsync(connectorHubService.callConnectorUsingState())
+                .thenApplyAsync(connectorHubService.waitForConnectorResponse())
                 .thenApply(this.handleResponseEntity(multiCallHandler))
-                .thenApply(connectorHubService.completeAsync())
+                .thenApplyAsync(connectorHubService.completeAsync())
                 .exceptionally(exception -> connectorHubService.handleAsyncFlowError(exception, connectorMessage,
-                        "Error running getSearchPage: " + exception.getMessage()));
+                        "Error running multiCall: " + exception.getMessage()));
 
-        return responseEntityBuilder.build(HttpStatus.OK, resultFuture);
+        return responseEntity.build();
+    }
+
+    private Function<ConnectorState, ConnectorState> getMultiCallParams() {
+        return connectorState -> {
+            ConnectorMessage connectorMessage = connectorState.getConnectorMessage();
+            List<ConnectorResponse> responseList = connectorState.getConnectorResponseList().getResponses();
+            // This example is only expecting 1 response
+            if (responseList.size() == 1) {
+                clog.info(connectorState.getConnectorMessage(), "Start Parsing");
+
+                String response = responseList.get(0).getResponse();
+                clog.info(connectorState.getConnectorMessage(), response);
+
+                ObjectMapper jsonMap = new ObjectMapper();
+                String accountID = "";
+                try {
+                    JsonNode component = jsonMap.readTree(response);
+                    JsonNode depositArray = component.at("/accountContainer/depositMessage/depositList/deposit");
+                    clog.info(connectorState.getConnectorMessage(), depositArray.toString());
+                    accountID = depositArray.get(1).get("accountId").asText();
+                } catch (Exception e) {
+                    clog.error(connectorMessage, "failed to get accountid");
+                }
+                // add accountId as param for the getTransactions call
+                connectorState.getConnectorRequestParams().addNameValue("accountId", accountID);
+            }
+            return connectorState;
+        };
     }
 
     /**
@@ -363,7 +622,7 @@ public class WorkflowExampleController extends ConnectorControllerBase {
     @PostMapping(path = "/sendRealtimeEvent", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ConnectorMessage sendRealtimeEvent(@RequestBody final String connectorJson) throws IOException {
         ConnectorMessage connectorMessage = mapper.readValue(connectorJson, ConnectorMessage.class);
-        Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
+        Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage);
         String eventName = parms.get(EVENT_NAME);
         String accounts = parms.get(ACCOUNTS);
         boolean success = true;
@@ -395,5 +654,19 @@ public class WorkflowExampleController extends ConnectorControllerBase {
         connectorMessage.setResponse(response);
         return connectorMessage;
     }
+
+    //endregion
+
+
+    private ConnectorRequestParams createConnectorRequestParams(ConnectorRequestParams connectorRequestParams,
+            Map<String, String> allParams, List<String> paramNames){
+        for (String name : paramNames) {
+            String param = allParams.getOrDefault(name, "");
+            if (!param.isEmpty()) {
+                connectorRequestParams.addNameValue(name, param);
+            }
+        }
+        return connectorRequestParams;
+    }    
 
 }

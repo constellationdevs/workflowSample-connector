@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
 import com.xtensifi.connectorservices.common.workflow.ConnectorResponse;
 import com.xtensifi.connectorservices.common.workflow.ConnectorState;
@@ -47,33 +44,6 @@ public class MultiCallHandler extends HandlerBase implements WorkflowHandlerLogi
         return resp;
     }
 
-    public Function<ConnectorState, ConnectorState> getMultiCallParams() {
-        return connectorState -> {
-            ConnectorMessage connectorMessage = connectorState.getConnectorMessage();
-            List<ConnectorResponse> responseList = connectorState.getConnectorResponseList().getResponses();
-            // This example is only expecting 1 response
-            if (responseList.size() == 1) {
-                logger.info(connectorState.getConnectorMessage(), "Start Parsing");
-
-                String response = responseList.get(0).getResponse();
-                logger.info(connectorState.getConnectorMessage(), response);
-
-                ObjectMapper jsonMap = new ObjectMapper();
-                String accountID = "";
-                try {
-                    JsonNode component = jsonMap.readTree(response);
-                    JsonNode depositArray = component.at("/accountContainer/depositMessage/depositList/deposit");
-                    logger.info(connectorState.getConnectorMessage(), depositArray.toString());
-                    accountID = depositArray.get(1).get("accountId").asText();
-                } catch (Exception e) {
-                    logger.error(connectorMessage, "failed to get accountid");
-                }
-                // add accountId as param for the getTransactions call
-                connectorState.getConnectorRequestParams().addNameValue("accountId", accountID);
-            }
-            return connectorState;
-        };
-    }
 
     @Override
     public String generateResponse(Map<String, String> parms, String userId, ConnectorMessage connectorMessage)

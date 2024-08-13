@@ -4,19 +4,15 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-
 import org.springframework.stereotype.Service;
 
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
-import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
 import com.xtensifi.connectorservices.common.workflow.ConnectorResponse;
 import com.xtensifi.connectorservices.common.workflow.ConnectorState;
 import com.xtensifi.dspco.ConnectorMessage;
 import com.xtensifi.connectorservices.common.events.RealtimeEventService;
 import coop.constellation.connectorservices.workflowexample.helpers.RealtimeEvents;
 
-import coop.constellation.connectorservices.workflowexample.controller.BaseParamsSupplier;
 import coop.constellation.connectorservices.workflowexample.controller.ConnectorControllerBase;
 import static coop.constellation.connectorservices.workflowexample.helpers.Constants.*;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class P2pTransferHandler extends HandlerBase implements WorkflowHandlerLogic {
 
-    private final BaseParamsSupplier baseParamsSupplier;
     private final ConnectorLogging logger;
     private final RealtimeEventService realtimeEventService;
     private final RealtimeEvents realtimeEvents;
@@ -62,7 +57,6 @@ public class P2pTransferHandler extends HandlerBase implements WorkflowHandlerLo
                 logger.info(connectorMessage, "realtime event for " + PLATFORM_ACCOUNT_TRANSACTION_ADDED + " sent. ");
             } catch (Exception e) {
                 logger.error(connectorMessage, "error sending realtime event ");
-                e.printStackTrace();
 
             }
 
@@ -76,24 +70,9 @@ public class P2pTransferHandler extends HandlerBase implements WorkflowHandlerLo
         return resp;
     }
 
-    public Function<ConnectorRequestParams, ConnectorRequestParams> getP2pTransferParams(
-            ConnectorMessage connectorMessage) {
-
-        return connectorRequestParams -> {
-            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage,
-                    baseParamsSupplier.get());
-
-            logger.info(connectorMessage, "all params GC: " + allParams);
-
-            List<String> paramNames = List.of("accountFrom", "accountTo", "transferAmount", "transferMemo",
-                    "occurrenceFromAccountType", "occurrenceToAccountType");
-
-            return createConnectorRequestParams(connectorRequestParams, allParams, paramNames);
-        };
-    }
 
     protected List<String> getFromAndToAccount(ConnectorMessage connectorMessage) {
-        Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage, baseParamsSupplier.get());
+        Map<String, String> parms = ConnectorControllerBase.getAllParams(connectorMessage);
         String fromAccount = parms.getOrDefault(FROM_ACCOUNT, "");
         String toAccount = parms.getOrDefault(TO_ACCOUNT, "");
         return List.of(fromAccount, toAccount);
