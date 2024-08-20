@@ -5,9 +5,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
 import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
-import com.xtensifi.dspco.ConnectorMessage;
 import com.xtensifi.dspco.UserData;
 
 @Service

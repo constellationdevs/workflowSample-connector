@@ -38,13 +38,6 @@ public class ConnectorControllerBase {
         this.clog = cl;
     }
 
-    private BaseParamsSupplier baseParamsSupplier;
-
-    @Autowired
-    public void setBaseParamsSupplier(BaseParamsSupplier supplier) {
-        this.baseParamsSupplier = supplier;
-    }
-
     /**
      * Boilerplate method for handling the connector message
      * 
@@ -61,7 +54,7 @@ public class ConnectorControllerBase {
         try {
             connectorMessage = objectMapper.readValue(connectorJson, ConnectorMessage.class);
 
-            final Map<String, String> allParams = getAllParams(connectorMessage, baseParamsSupplier.get());
+            final Map<String, String> allParams = getAllParams(connectorMessage);
 
             final String userId = connectorMessage.getExternalServicePayload().getUserData().getUserId();
 
@@ -105,7 +98,7 @@ public class ConnectorControllerBase {
             ConnectorMessage connectorMessage = connectorState.getConnectorMessage();
             clog.info(connectorMessage, "inside handle response entity");
 
-            final Map<String, String> allParams = getAllParams(connectorMessage, baseParamsSupplier.get());
+            final Map<String, String> allParams = getAllParams(connectorMessage);
 
             String response = "{}";
             try {
@@ -143,9 +136,8 @@ public class ConnectorControllerBase {
      * @param connectorMessage the request connector message
      * @return a Map of the value pairs
      */
-    public static Map<String, String> getAllParams(final ConnectorMessage connectorMessage,
-            Map<String, String> baseParams) {
-        final Map<String, String> allParams = new HashMap<>(baseParams);
+    public static Map<String, String> getAllParams(final ConnectorMessage connectorMessage) {
+        final Map<String, String> allParams = new HashMap<>();
         final ExternalServicePayload externalServicePayload = connectorMessage.getExternalServicePayload();
         final ConnectorParametersResponse connectorParametersResponse = connectorMessage
                 .getConnectorParametersResponse();

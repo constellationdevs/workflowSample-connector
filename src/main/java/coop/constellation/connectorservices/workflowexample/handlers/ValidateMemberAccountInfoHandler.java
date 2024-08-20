@@ -4,29 +4,19 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xtensifi.connectorservices.common.logging.ConnectorLogging;
-import com.xtensifi.connectorservices.common.workflow.ConnectorRequestParams;
 import com.xtensifi.connectorservices.common.workflow.ConnectorResponse;
 import com.xtensifi.connectorservices.common.workflow.ConnectorState;
 import com.xtensifi.dspco.ConnectorMessage;
-import coop.constellation.connectorservices.workflowexample.controller.BaseParamsSupplier;
-import coop.constellation.connectorservices.workflowexample.controller.ConnectorControllerBase;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ValidateMemberAccountInfoHandler extends HandlerBase implements WorkflowHandlerLogic {
 
-    private final BaseParamsSupplier baseParamsSupplier;
     private final ConnectorLogging logger;
-    private final ObjectMapper mapper;
-
     @Override
     public String generateResponse(final Map<String, String> parms, ConnectorState connectorState)
             throws IOException, ParseException {
@@ -53,33 +43,6 @@ public class ValidateMemberAccountInfoHandler extends HandlerBase implements Wor
         return resp;
     }
 
-    public Function<ConnectorRequestParams, ConnectorRequestParams> getValidateMemberAccountInfoParams(
-            ConnectorMessage connectorMessage) {
-
-        return connectorRequestParams -> {
-            final Map<String, String> allParams = ConnectorControllerBase.getAllParams(connectorMessage,
-                    baseParamsSupplier.get());
-
-            List<String> paramList = List.of("memberId", "accountId", "firstThreeOfLastName");
-
-            for (String paramName : paramList) {
-                String paramValue = allParams.getOrDefault(paramName, "");
-                connectorRequestParams.addNameValue(paramName, paramValue);
-            }
-
-            try {
-                logger.info(connectorMessage, "all params GC: " + mapper.writeValueAsString(allParams));
-                logger.info(connectorMessage, "connector request params for validate member account info: "
-                        + mapper.writeValueAsString(connectorRequestParams));
-                logger.info(connectorMessage,
-                        "this is the connector message: " + mapper.writeValueAsString(connectorMessage));
-            } catch (JsonProcessingException e) {
-                // do nothing
-            }
-
-            return connectorRequestParams;
-        };
-    }
 
     @Override
     public String generateResponse(Map<String, String> parms, String userId, ConnectorMessage connectorMessage)
